@@ -1,9 +1,9 @@
 import os
-import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import openai
 import requests
+from config import OPENAI_API_KEY, NEWSAPI_KEY, PROXY_URL
 
 app = FastAPI()
 
@@ -25,8 +25,6 @@ proxies = {
     "https": proxy_url,
 }
 
-# Настройка HTTP клиента для OpenAI с использованием прокси
-openai.http_client = httpx.Client(proxies=proxies)
 
 class Topic(BaseModel):
     topic: str
