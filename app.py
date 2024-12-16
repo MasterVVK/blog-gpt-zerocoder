@@ -1,4 +1,5 @@
 import os
+import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import openai
@@ -9,18 +10,30 @@ app = FastAPI()
 # Получаем API ключи из переменных окружения
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 newsapi_key = os.environ.get("NEWSAPI_KEY")
+proxy_url = os.environ.get("PROXY_URL")  # Получаем прокси-сервер из переменной окружения
 
 if not openai.api_key:
     raise ValueError("Переменная окружения OPENAI_API_KEY не установлена")
 if not newsapi_key:
     raise ValueError("Переменная окружения NEWSAPI_KEY не установлена")
+if not proxy_url:
+    raise ValueError("Переменная окружения PROXY_URL не установлена")
+
+# Настройка прокси
+proxies = {
+    "http": proxy_url,
+    "https": proxy_url,
+}
+
+# Настройка HTTP клиента для OpenAI с использованием прокси
+openai.http_client = httpx.Client(proxies=proxies)
 
 class Topic(BaseModel):
     topic: str
 
 def get_recent_news(topic):
     url = f"https://newsapi.org/v2/everything?q={topic}&apiKey={newsapi_key}"
-    response = requests.get(url)
+    response = requests.get(url, proxies=proxies)
     if response.status_code != 200:
         raise HTTPException(status_code=500, detail="Ошибка при получении данных из NewsAPI")
     articles = response.json().get("articles", [])
